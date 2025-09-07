@@ -221,7 +221,7 @@ http://www.apache.org/licenses/LICENSE-2.0
 
 ## NOTICE
 
-CountCraft
+CountCraft-Obsidian
 Copyright (c) 2025 MEET VEKARIA
 
 Required attribution:
