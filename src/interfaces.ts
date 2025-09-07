@@ -20,12 +20,6 @@ export interface CountResult {
     [key: string]: number;
 }
 
-export interface PropertyInfo {
-    name: string;
-    type: 'number';
-    exists: boolean;
-}
-
 export interface HeadingInfo {
     level: number;
     heading: string;
