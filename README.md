@@ -1,29 +1,48 @@
+
 # CountCraft — Obsidian Note Statistics, Saved as Properties
 
 _**CountCraft is a Notes Analytics Sidekick for Obsidian. It adds important stats to your Obsidian notes as properties whenever you want to. Configure counters once, trigger on demand, and get precise metrics saved into note properties—ready for queries, dashboards, and workflows.**_
 
-## Supported Counters
+## Key Features
+
+### Counting Capabilities
 
 Following are the supported counters (as of now, planning to expand the support in the future):
 
-1. Word count !!
-2. Character count (with and without spaces) !!
-3. Line count !!
-4. Heading count (overall)
-5. Heading count (by specific level, H1–H6)
+- **Word Count**: Total number of words in the note. !!
+- **Character Count (with spaces)**: All characters including spaces and punctuation. !!
+- **Character Count (without spaces)**: Characters excluding whitespace. !!
+- **Line Count**: Total number of lines in the note. !!
+- **Heading Count (All Levels)**: Total number of headings regardless of level.
+- **Heading Count (Specific Level)**: Count headings of a specific level (H1-H6).
 
-!! Counters 1, 2, and 3 also support calculation based on rendered text instead of markdown source . So, characters like heading indicators, table header separators, etc. are not counted in our calculation.
+!! Also support calculation based on rendered text instead of markdown source. So, characters like heading indicators, table header separators, etc. are not counted in our calculation.
 
-## Key Features
+### Powerful Configuration
 
-- Configurable calculations with feature to add/edit and enable/disable each calculation.
-- Configurable property mappings (auto-created as number type if missing).
-- Duplicate check on property mapping.
-- Calculation preview (without editing notes, without updating any property).
-- Command palette integration and optional ribbon button.
-- Cache-aware and fast on large vaults through Obsidian**’**s metadata cache.
+- **Enable/Disable Controls**: Toggle individual calculations on or off.
+- **Custom Property Mapping**: Map each calculation to any property name.
+- **Duplicate Prevention**: System prevents duplicate calculation configurations.
+- **Property Auto-Creation**: Automatically creates number-type properties if they don't exist.
+- **Optional Ribbon Icon**: Enable the optional ribbon icon for quick access to trigger calculations.
+- **Calculations Management**: Enable or disable, edit or delete calculations as per need.
+
+### Calculation Preview
+
+Preview statistics on calculation for a note for quick reference, without updating the properties or editing the notes.
+
+### Other Features
+
+- Command palette integration. This enables adding shortcut to plugin commands or creating buttons or other automaations using other plugins from Obsidian Community.
+- Cache-aware and fast on large vaults through Obsidian’s metadata cache.
 - Debug support.
-- Batch calculations across vault (experimental).
+
+### Experimental Features
+
+***Use with caution. Keep backup of the vault before use.***
+
+- Batch calculations across vault.
+- Auto-calculate on saving the file.
 
 ## Demo Use Cases
 
@@ -143,22 +162,34 @@ Releasing:
 - Ensure manifest.json and versions.json are updated with the new version and minAppVersion.
 - Attach main.js, manifest.json, and styles.css (if present) to the GitHub release.
 
+### Debug
+
+Enable debug logging in settings to:
+- Monitor calculation performance
+- Track property creation
+- Identify processing errors
+- View detailed execution logs
+
 ## Support
 
 If you find issues or have feature requests, open an issue in the repository.
 
 ### Troubleshooting
 
-- Property name doesn’t apply
-	- Property names are preserved. Ensure a unique name is entered.
-	- If a default autofilled value appears, click the field and type a custom name (it won’t be overwritten after editing).
-- Calculation are looking high
-	- CountCraft excludes frontmatter automatically; if counts still look high, verify that body content includes long code blocks or embedded content.
-	- Go through the known issues.
-- Parameter control not clickable
-	- The settings UI is fully scoped and rebuilt per change; if encountering issues, reload Obsidian and re-open the settings. Ensure the latest version is installed.
-- Edit doesn’t change values
-	- Edits are handled via a modal; make changes and Save. The settings tab refreshes automatically.
+**Q: Calculations not running**
+A: Check that at least one calculation is enabled in settings.
+
+**Q: Properties not appearing**
+A: Ensure property names are valid (spaces become hyphens, no other special character).
+
+**Q: Performance issues on large vaults**
+A: Enable debug mode to monitor performance, consider running calculations on subsets of files. Submit details through submitting an issue on the repo.
+
+**Q: Auto-calculate not working**
+A: This feature is experimental and has a 500ms delay after file saves
+
+**Q: Calculation are looking high**
+A: CountCraft excludes frontmatter automatically; if counts still look high, verify that body content includes long code blocks or embedded content. (Go through the known issues.)
 
 ### Known Issues
 
