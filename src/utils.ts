@@ -1,37 +1,11 @@
 // src/utils.ts
 
 import { App, TFile, CachedMetadata } from 'obsidian';
-import { CounterConfig, PropertyInfo, HeadingInfo } from './interfaces';
+import { CounterConfig, HeadingInfo } from './interfaces';
 //import { PROPERTY_TYPE } from './constants';
 
 export class PropertyManager {
     constructor(private app: App) {}
-
-    /**
-     * Ensures a property exists in the vault's property registry
-     */
-    async ensurePropertyExists(propertyName: string): Promise<PropertyInfo> {
-        const metadataTypeManager = (this.app as any).metadataTypeManager;
-        
-        if (!metadataTypeManager) {
-            return { name: propertyName, type: 'number', exists: false };
-        }
-
-        const existingType = metadataTypeManager.getPropertyInfo(propertyName);
-        
-        if (existingType && existingType.type === 'number') {
-            return { name: propertyName, type: 'number', exists: true };
-        }
-
-        // Create or update property to number type
-        try {
-            await metadataTypeManager.savePropertyInfo(propertyName, { type: 'number' });
-            return { name: propertyName, type: 'number', exists: true };
-        } catch (error) {
-            console.warn(`Could not create property ${propertyName}:`, error);
-            return { name: propertyName, type: 'number', exists: false };
-        }
-    }
 
     /**
      * Updates a file's property with a numeric value

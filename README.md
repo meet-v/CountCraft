@@ -16,7 +16,7 @@ Following are the supported counters (as of now, planning to expand the support 
 - **Heading Count (All Levels)**: Total number of headings regardless of level.
 - **Heading Count (Specific Level)**: Count headings of a specific level (H1-H6).
 
-!! Also support calculation based on rendered text instead of markdown source. So, characters like heading indicators, table header separators, etc. are not counted in our calculation.
+!! Word and character counts are based on the rendered text, not the raw markdown source. This means that markdown syntax like `*`, `#`, and `[]()` is not included in the counts, giving you a more accurate representation of your note's content. Line and heading counts are still based on the markdown source.
 
 ### Powerful Configuration
 
@@ -191,13 +191,8 @@ A: This feature is experimental and has a 500ms delay after file saves
 **Q: Calculation are looking high**
 A: CountCraft excludes frontmatter automatically; if counts still look high, verify that body content includes long code blocks or embedded content. (Go through the known issues.)
 
-### Known Issues
-
-1. The counter includes all the content in the markdown note to calculate words, characters, or lines. This includes the markdown syntax as the calculation is done based on markdown note, and note rendered note.
-
 ## Roadmap
 
-- Include a feature to calculate the rendered content only.
 - Custom counters.
 
 ## Contributing
