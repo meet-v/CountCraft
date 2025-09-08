@@ -94,7 +94,7 @@ export default class CountCraftPlugin extends Plugin {
         // Open settings command
         this.addCommand({
             id: COMMAND_IDS.OPEN_SETTINGS,
-            name: 'Open CountCraft Settings',
+            name: 'Open Plugin Settings',
             callback: () => {
                 this.openSettings();
             }
