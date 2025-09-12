@@ -38,12 +38,12 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/countcraft/obsidian-countcraft-plugin.git"
+        "url": "git+https://github.com/meet-v/CountCraft.git"
     },
     "bugs": {
-        "url": "https://github.com/countcraft/obsidian-countcraft-plugin/issues"
+        "url": "https://github.com/meet-v/CountCraft/issues"
     },
-    "homepage": "https://github.com/countcraft/obsidian-countcraft-plugin#readme",
+    "homepage": "https://github.com/meet-v/CountCraft#readme",
     "engines": {
         "node": ">=16"
     }
