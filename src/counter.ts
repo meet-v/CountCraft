@@ -1,16 +1,18 @@
 // src/counter.ts
 
-import { App, TFile, Notice } from 'obsidian';
+import { App, TFile, Notice, MarkdownRenderer, Component, Plugin } from 'obsidian';
 import { CounterConfig, CounterType, FileStats, CountResult } from './interfaces';
 import { PropertyManager, CacheHelper, TextAnalyzer, DebugLogger, errorMessage } from './utils';
 
 export class CountCraftCounter {
     private propertyManager: PropertyManager;
     private cacheHelper: CacheHelper;
+    private plugin: Plugin;
 
-    constructor(private app: App) {
+    constructor(private app: App, plugin: Plugin) {
         this.propertyManager = new PropertyManager(app);
         this.cacheHelper = new CacheHelper(app);
+        this.plugin = plugin;
     }
 
     /**
@@ -30,7 +32,7 @@ export class CountCraftCounter {
             const content = await this.cacheHelper.getFileBody(file);
             
             // Calculate base statistics
-            const fileStats = this.calculateBaseStats(content);
+            const fileStats = await this.calculateBaseStats(content, file.path);
             
             // Process each enabled counter configuration
             const results: CountResult = {};
@@ -38,9 +40,6 @@ export class CountCraftCounter {
             for (const config of enabledConfigs) {
                 try {
                     const value = this.getCountForType(config.type, fileStats, config.parameter);
-                    
-                    // Ensure property exists in vault
-                    await this.propertyManager.ensurePropertyExists(config.property);
                     
                     // Update file property
                     await this.propertyManager.updateFileProperty(file, config.property, value);
@@ -70,11 +69,19 @@ export class CountCraftCounter {
     /**
      * Calculates base statistics for file content
      */
-    private calculateBaseStats(content: string): FileStats {
-        // Use optimized text analysis functions
-        const wordCount = TextAnalyzer.countWords(content);
-        const charCountWithSpaces = TextAnalyzer.countCharactersWithSpaces(content);
-        const charCountWithoutSpaces = TextAnalyzer.countCharactersWithoutSpaces(content);
+    private async calculateBaseStats(content: string, sourcePath: string): Promise<FileStats> {
+        // Render markdown to get clean text for word and character counts
+        const tempDiv = document.createElement('div');
+        // Passing the plugin component so that it does not gets stored in a real component and gets garbage collected
+        await MarkdownRenderer.render(this.app, content, tempDiv, sourcePath, this.plugin);
+        const cleanText = tempDiv.innerText;
+
+        // Use clean text for word and character counts
+        const wordCount = TextAnalyzer.countWords(cleanText);
+        const charCountWithSpaces = TextAnalyzer.countCharactersWithSpaces(cleanText);
+        const charCountWithoutSpaces = TextAnalyzer.countCharactersWithoutSpaces(cleanText);
+
+        // Use original content for line and heading counts
         const lineCount = TextAnalyzer.countLines(content);
         const headingsByLevel = TextAnalyzer.countHeadingsByLevel(content);
         const headingCount = Object.values(headingsByLevel).reduce((sum, count) => sum + count, 0);
@@ -202,7 +209,7 @@ export class CountCraftCounter {
 
         if (needsContent) {
             const content = await this.cacheHelper.getFileBody(file);
-            fullStats = this.calculateBaseStats(content);
+            fullStats = await this.calculateBaseStats(content, file.path);
         } else {
             // Use cached data only
             fullStats = {
@@ -221,7 +228,6 @@ export class CountCraftCounter {
         for (const config of enabledConfigs) {
             try {
                 const value = this.getCountForType(config.type, fullStats, config.parameter);
-                await this.propertyManager.ensurePropertyExists(config.property);
                 await this.propertyManager.updateFileProperty(file, config.property, value);
                 results[config.property] = value;
             } catch (error: unknown) {
@@ -259,6 +265,6 @@ export class CountCraftCounter {
         }
 
         const content = await this.cacheHelper.getFileBody(file);
-        return this.calculateBaseStats(content);
+        return await this.calculateBaseStats(content, file.path);
     }
 }
