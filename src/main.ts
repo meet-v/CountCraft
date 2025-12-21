@@ -14,7 +14,7 @@ export default class CountCraftPlugin extends Plugin {
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
-        this.counter = new CountCraftCounter(app);
+        this.counter = new CountCraftCounter(app, this);
     }
 
     async onload() {
@@ -25,7 +25,7 @@ export default class CountCraftPlugin extends Plugin {
         DebugLogger.log('CountCraft plugin loading...');
 
         // Initialize counter
-        this.counter = new CountCraftCounter(this.app);
+        this.counter = new CountCraftCounter(this.app, this);
 
         // Add settings tab
         this.addSettingTab(new CountCraftSettingsTab(this.app, this));
