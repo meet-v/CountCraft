@@ -1,8 +1,8 @@
 // src/main.ts
 
 import { App, Plugin, TFile, Notice, PluginManifest } from 'obsidian';
-import { PluginSettings } from './interfaces';
-import { DEFAULT_SETTINGS, COMMAND_IDS, ICONS, MESSAGES, PLUGIN_NAME } from './constants';
+import { PluginSettings, AppWithSetting } from './interfaces';
+import { DEFAULT_SETTINGS, COMMAND_IDS, ICONS, MESSAGES } from './constants';
 import { CountCraftSettingsTab } from './settings';
 import { CountCraftCounter } from './counter';
 import { DebugLogger, errorMessage } from './utils';
@@ -49,7 +49,7 @@ export default class CountCraftPlugin extends Plugin {
         }
     }
 
-    async onunload() {
+    onunload() {
         DebugLogger.log('CountCraft plugin unloading...');
         this.removeRibbonIcon();
     }
@@ -76,7 +76,7 @@ export default class CountCraftPlugin extends Plugin {
         // Main calculation command
         this.addCommand({
             id: COMMAND_IDS.CALCULATE,
-            name: 'Calculate Statistics for Current Note',
+            name: 'Calculate statistics for current note',
             callback: async () => {
                 await this.runCalculationCommand();
             }
@@ -85,7 +85,7 @@ export default class CountCraftPlugin extends Plugin {
         // Calculate all files command
         this.addCommand({
             id: 'calculate-all-files',
-            name: 'Calculate Statistics for All Files',
+            name: 'Calculate statistics for all files',
             callback: async () => {
                 await this.runBatchCalculationCommand();
             }
@@ -103,7 +103,7 @@ export default class CountCraftPlugin extends Plugin {
         // Preview stats command (doesn't update properties)
         this.addCommand({
             id: 'preview-stats',
-            name: 'Preview Statistics (No Property Updates)',
+            name: 'Preview statistics (no property updates)',
             callback: async () => {
                 await this.previewStatsCommand();
             }
@@ -146,17 +146,19 @@ export default class CountCraftPlugin extends Plugin {
     private registerEventListeners() {
         // Auto-calculation on file save (if enabled)
         this.registerEvent(
-            this.app.vault.on('modify', async (file) => {
+            this.app.vault.on('modify', (file) => {
                 if (this.settings.autoCalculate && file instanceof TFile && file.extension === 'md') {
                     // Use a small delay to ensure file is fully saved
-                    setTimeout(async () => {
-                        try {
-                            await this.counter.calculateFileStatsFromCache(file, this.settings.calculations);
-                            DebugLogger.log(`Auto-calculated stats for: ${file.path}`);
-                        } catch (error: unknown) {
-                            const msg = errorMessage(error)
-                            DebugLogger.error('Auto-calculation failed:', msg);
-                        }
+                    setTimeout(() => {
+                        (async () => {
+                            try {
+                                await this.counter.calculateFileStatsFromCache(file, this.settings.calculations);
+                                DebugLogger.log(`Auto-calculated stats for: ${file.path}`);
+                            } catch (error: unknown) {
+                                const msg = errorMessage(error)
+                                DebugLogger.error('Auto-calculation failed:', msg);
+                            }
+                        })();
                     }, 500);
                 }
             })
@@ -181,8 +183,8 @@ export default class CountCraftPlugin extends Plugin {
             return;
         }
 
-        if (!this.counter.isFileProcessable(activeFile)) {
-            new Notice('Selected file cannot be processed (must be a markdown file)');
+        if (!(await this.counter.isFileProcessable(activeFile))) {
+            new Notice('Selected file cannot be processed. (Must be a Markdown file)');
             return;
         }
 
@@ -228,7 +230,7 @@ export default class CountCraftPlugin extends Plugin {
 
         const files = this.app.vault.getMarkdownFiles();
         if (files.length === 0) {
-            new Notice('No markdown files found in vault');
+            new Notice('No Markdown files found in vault.');
             return;
         }
 
@@ -238,13 +240,20 @@ export default class CountCraftPlugin extends Plugin {
             return;
         }
 
-        try {
-            await this.counter.calculateAllFiles(this.settings.calculations);
-        } catch (error: unknown) {
-            const msg = errorMessage(error)
-            new Notice(`Batch calculation failed: ${msg}`);
-            DebugLogger.error('Batch calculation failed:', msg);
-        }
+        new ConfirmModal(this.app, confirmMessage, () => {
+            (async () => {
+                try {
+                    new Notice(`Starting calculation for ${files.length} files...`);
+                    await this.counter.calculateAllFiles(this.settings.calculations);
+                    new Notice('Batch calculation complete!');
+                    DebugLogger.log(`Successfully processed ${files.length} files.`);
+                } catch (error: unknown) {
+                    const msg = errorMessage(error)
+                    new Notice(`Batch calculation failed: ${msg}`);
+                    DebugLogger.error('Batch calculation failed:', msg);
+                }
+            })();
+        }).open();
     }
 
     /**
@@ -258,8 +267,8 @@ export default class CountCraftPlugin extends Plugin {
             return;
         }
 
-        if (!this.counter.isFileProcessable(activeFile)) {
-            new Notice('Selected file cannot be processed (must be a markdown file)');
+        if (!(await this.counter.isFileProcessable(activeFile))) {
+            new Notice('Selected file cannot be processed. (Must be a Markdown file)');
             return;
         }
 
@@ -282,7 +291,7 @@ export default class CountCraftPlugin extends Plugin {
             
             // Create a modal or notice with the stats
             new Notice(message, 8000);
-            console.log('File Statistics Preview:', stats);
+            console.debug('File statistics preview:', stats);
             
         } catch (error: unknown) {
             const msg = errorMessage(error)
@@ -295,7 +304,7 @@ export default class CountCraftPlugin extends Plugin {
      * Open plugin settings
      */
     private openSettings() {
-        const settingTab = (this.app as any).setting;
+        const settingTab = (this.app as AppWithSetting).setting;
         if (settingTab) {
             settingTab.open();
             settingTab.openTabById(this.manifest.id);
@@ -380,37 +389,44 @@ export default class CountCraftPlugin extends Plugin {
     /**
      * Validate imported settings structure
      */
-    private validateImportedSettings(settings: any): boolean {
+    private validateImportedSettings(settings: unknown): boolean {
+        // 1. Initial check: must be an object and not null
         if (typeof settings !== 'object' || settings === null) {
             return false;
         }
 
+        // 2. Cast to a local helper type to allow property access safely
+        const s = settings as Record<string, any>;
+
         // Check required fields exist and have correct types
-        if (settings.calculations && !Array.isArray(settings.calculations)) {
+        if (s.calculations && !Array.isArray(s.calculations)) {
             return false;
         }
 
-        if (settings.ribbonEnabled !== undefined && typeof settings.ribbonEnabled !== 'boolean') {
+        if (s.ribbonEnabled !== undefined && typeof s.ribbonEnabled !== 'boolean') {
             return false;
         }
 
-        if (settings.autoCalculate !== undefined && typeof settings.autoCalculate !== 'boolean') {
+        if (s.autoCalculate !== undefined && typeof s.autoCalculate !== 'boolean') {
             return false;
         }
 
-        if (settings.debugMode !== undefined && typeof settings.debugMode !== 'boolean') {
+        if (s.debugMode !== undefined && typeof s.debugMode !== 'boolean') {
             return false;
         }
 
         // Validate calculation configurations
-        if (settings.calculations) {
-            for (const calc of settings.calculations) {
+        if (s.calculations) {
+            for (const calc of s.calculations) {
+                // Check for presence and basic types
+                if (!calc || typeof calc !== 'object') return false;
+                
+                // Validate specific properties
                 if (!calc.id || !calc.type || !calc.property || typeof calc.enabled !== 'boolean') {
                     return false;
                 }
             }
         }
-
         return true;
     }
 }

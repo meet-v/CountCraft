@@ -1,7 +1,7 @@
 // src/utils.ts
 
-import { App, TFile, CachedMetadata } from 'obsidian';
-import { CounterConfig, HeadingInfo } from './interfaces';
+import { App, TFile, CachedMetadata, HeadingCache } from 'obsidian';
+import { CounterConfig, CounterType, HeadingInfo } from './interfaces';
 //import { PROPERTY_TYPE } from './constants';
 
 export class PropertyManager {
@@ -64,10 +64,10 @@ export class CacheHelper {
      * Checks if file has cached headings
      */
     getCachedHeadings(file: TFile) {
-        const cache = this.getCachedMetadata(file);
+        const cache = this.app.metadataCache.getFileCache(file)
         const fmEnd = cache?.frontmatterPosition?.end?.line ?? -1; // frontmatter end line [1]
         const headings = cache?.headings ?? [];
-        return headings.filter(h => (h as any).position?.start?.line > fmEnd);
+        return headings.filter(h => (h as HeadingCache).position.start.line > fmEnd);
     }
 }
 
@@ -97,7 +97,7 @@ export class ValidationHelper {
 
         // Validate parameter if required
         if (config.parameter !== undefined) {
-            if (config.type === 'headingLevelCount') {
+            if (config.type === CounterType.HEADING_LEVEL_COUNT) {
                 const level = Number(config.parameter);
                 if (isNaN(level) || level < 1 || level > 6) {
                     return 'Heading level must be between 1 and 6';
@@ -112,7 +112,7 @@ export class ValidationHelper {
      * Generates unique ID for counter configuration
      */
     static generateCounterId(): string {
-        return `counter_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return `counter_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
     }
 
     /**
@@ -197,21 +197,21 @@ export class DebugLogger {
         this.enabled = enabled;
     }
 
-    static log(message: string, data?: any) {
+    static log(message: string, data?: unknown) {
         if (this.enabled) {
-            console.log(`[CountCraft] ${message}`, data || '');
+            console.debug(`[CountCraft] ${message}`, data ?? '');
         }
     }
 
-    static warn(message: string, data?: any) {
+    static warn(message: string, data?: unknown) {
         if (this.enabled) {
-            console.warn(`[CountCraft] ${message}`, data || '');
+            console.warn(`[CountCraft] ${message}`, data ?? '');
         }
     }
 
-    static error(message: string, error?: any) {
+    static error(message: string, error?: unknown) {
         if (this.enabled) {
-            console.error(`[CountCraft] ${message}`, error || '');
+            console.error(`[CountCraft] ${message}`, error ?? '');
         }
     }
 }

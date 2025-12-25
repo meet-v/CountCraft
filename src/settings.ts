@@ -1,11 +1,41 @@
 // src/settings.ts
 
-import { App, Modal, PluginSettingTab, Setting, TextComponent, DropdownComponent, ButtonComponent, ToggleComponent, Notice } from 'obsidian';
+import { App, Modal, PluginSettingTab, Setting, TextComponent, DropdownComponent, ToggleComponent, Notice } from 'obsidian';
 import { CounterConfig, CounterType } from './interfaces';
-import { COUNTER_DEFINITIONS, DEFAULT_PROPERTY_NAMES, DEFAULT_SETTINGS} from './constants';
+import { COUNTER_DEFINITIONS, DEFAULT_PROPERTY_NAMES} from './constants';
 import { ValidationHelper, DebugLogger, errorMessage} from './utils';
 import CountCraftPlugin from './main';
-import { setEngine } from 'crypto';
+
+class ConfirmModal extends Modal {
+    constructor(app: App, private message: string, private onConfirm: () => void) {
+        super(app);
+    }
+
+    onOpen() {
+        const { contentEl } = this;
+
+        // 1. Consistent Header using .setHeading()
+        new Setting(contentEl)
+            .setName('Confirm Action')
+            .setHeading();
+
+        // 2. Consistent Description (the message)
+        new Setting(contentEl)
+            .setDesc(this.message);
+
+        new Setting(contentEl)
+            .addButton(btn => btn
+                .setButtonText('Cancel')
+                .onClick(() => this.close()))
+            .addButton(btn => btn
+                .setButtonText('Confirm')
+                .setCta()
+                .onClick(() => {
+                    this.onConfirm();
+                    this.close();
+                }));
+    }
+}
 
 class EditCalculationModal extends Modal {
   private plugin: CountCraftPlugin;
@@ -33,13 +63,15 @@ class EditCalculationModal extends Modal {
   onOpen(): void {
     const { contentEl } = this;
     contentEl.empty();
-    this.setTitle('Edit Calculation');
+    this.setTitle('Edit calculation');
 
     // Type
     new Setting(contentEl)
-      .setName('Counter Type')
+      .setName('Counter type')
       .addDropdown((dd: DropdownComponent) => {
-        COUNTER_DEFINITIONS.forEach((def) => dd.addOption(def.type, def.name));
+        COUNTER_DEFINITIONS.forEach((def) => {
+            dd.addOption(def.type, def.name);
+        });
         dd.setValue(this.type)
           .onChange((v) => {
             this.type = v as CounterType;
@@ -56,9 +88,9 @@ class EditCalculationModal extends Modal {
 
     // Property
     new Setting(contentEl)
-      .setName('Property Name')
+      .setName('Property name')
       .addText((t: TextComponent) =>
-        t.setPlaceholder('Type the exact property name you want. e.g., word-count')
+        t.setPlaceholder('Type the exact property name you want (e.g., word-count).')
           .setValue(this.property)
           .onChange((v) => {
             this.property = ValidationHelper.sanitizePropertyName(v);
@@ -112,7 +144,7 @@ class EditCalculationModal extends Modal {
       .addButton((b) =>
         b.setButtonText('Save')
           .setCta()
-          .onClick(async () => {
+          .onClick(() => {
             const updated: CounterConfig = {
               ...this.config,
               type: this.type,
@@ -151,10 +183,10 @@ export class CountCraftSettingsTab extends PluginSettingTab {
         containerEl.empty();
 
         // Plugin header
-        containerEl.createEl('h2', { text: 'CountCraft Settings' });
-        containerEl.createEl('p', { 
-            text: 'Configure counting calculations and property mappings for your notes.' 
-        });
+        new Setting(containerEl)
+            .setName('CountCraft Settings')
+            .setDesc('Configure counting calculations and property mappings for your notes.')
+            .setHeading();
 
         // General settings
         this.renderGeneralSettings(containerEl);
@@ -170,7 +202,10 @@ export class CountCraftSettingsTab extends PluginSettingTab {
     }
 
     private renderGeneralSettings(containerEl: HTMLElement): void {
-        containerEl.createEl('h3', { text: 'General Settings' });
+        new Setting(containerEl)
+            .setName('General settings')
+            .setDesc('Configure counting calculations and property mappings for your notes.')
+            .setHeading();
 
         // Ribbon icon setting
         new Setting(containerEl)
@@ -206,7 +241,9 @@ export class CountCraftSettingsTab extends PluginSettingTab {
 
     private renderCalculationsSection(containerEl: HTMLElement): void {
         const calculationsContainer = containerEl.createDiv();
-        calculationsContainer.createEl('h3', { text: 'Configured Calculations' });
+        new Setting(calculationsContainer)
+            .setName('Configured calculations')
+            .setHeading();
 
         if (this.plugin.settings.calculations.length === 0) {
             calculationsContainer.createEl('p', { 
@@ -257,19 +294,27 @@ export class CountCraftSettingsTab extends PluginSettingTab {
                 .setButtonText('Delete')
                 .setTooltip('Remove this calculation')
                 .setWarning()
-                .onClick(async () => {
-                    if (confirm(`Are you sure you want to delete the "${displayName}" calculation?`)) {
-                        this.plugin.settings.calculations.splice(index, 1);
-                        await this.plugin.saveSettings();
-                        this.display(); // Refresh settings
-                        new Notice(`Deleted calculation: ${displayName}`);
-                    }
+                .onClick(() => {
+                    new ConfirmModal(
+                        this.app,
+                        `Are you sure you want to delete the "${displayName}" calculation?`,
+                        () => {
+                            (async () => {
+                                this.plugin.settings.calculations.splice(index, 1);
+                                await this.plugin.saveSettings();
+                                this.display(); // Refresh settings
+                                new Notice(`Deleted calculation: ${displayName}`);
+                            })();
+                        }
+                    ).open();
                 })
             );
     }
 
     private renderAddCalculationSection(containerEl: HTMLElement): void {
-        containerEl.createEl('h3', { text: 'Add New Calculation' });
+        new Setting(containerEl)
+            .setName('Add new calculation')
+            .setHeading();
 
         const formContainer = containerEl.createDiv({ cls: 'countcraft-add-form' });
 
@@ -286,7 +331,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
 
         // Counter type dropdown
         new Setting(formContainer)
-            .setName('Counter Type')
+            .setName('Counter type')
             .setDesc('Select the type of calculation to perform')
             .addDropdown(dropdown => {
                 dropdown.addOption('', 'Select a counter type...');
@@ -317,7 +362,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
         // Property name input
         //const propertyNameSetting = new Setting(formContainer)
         new Setting(formContainer)
-            .setName('Property Name')
+            .setName('Property name')
             .setDesc('Name of the property to store the calculation result')
             .addText(text => {
                     propertyNameInput = text;
@@ -469,17 +514,21 @@ export class CountCraftSettingsTab extends PluginSettingTab {
     }
 
     private editCalculation(config: CounterConfig, index: number): void {
-    new EditCalculationModal(this.app, this.plugin, config, async (updated) => {
-        // Persist updated config
-        this.plugin.settings.calculations[index] = updated;
-        await this.plugin.saveSettings();
-        this.display(); // refresh settings UI
-        new Notice('Calculation updated');
-    }).open();
+        new EditCalculationModal(this.app, this.plugin, config, (updated) => {
+            // Persist updated config
+            (async () => {
+                this.plugin.settings.calculations[index] = updated;
+                await this.plugin.saveSettings();
+                this.display(); // refresh settings UI
+                new Notice('Calculation updated');
+            })();
+        }).open();
     }
 
     private renderDebugSection(containerEl: HTMLElement): void {
-        containerEl.createEl('h3', { text: 'Debug Settings' });
+        new Setting(containerEl)
+            .setName('Debug settings')
+            .setHeading();
 
         new Setting(containerEl)
             .setName('Enable debug logging')

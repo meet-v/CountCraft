@@ -1,6 +1,6 @@
 // src/counter.ts
 
-import { App, TFile, Notice, MarkdownRenderer, Component, Plugin } from 'obsidian';
+import { App, TFile, Notice, MarkdownRenderer, Plugin, HeadingCache } from 'obsidian';
 import { CounterConfig, CounterType, FileStats, CountResult } from './interfaces';
 import { PropertyManager, CacheHelper, TextAnalyzer, DebugLogger, errorMessage } from './utils';
 
@@ -62,7 +62,7 @@ export class CountCraftCounter {
             const msg = errorMessage(error)
             DebugLogger.error('Error calculating file stats:', msg);
             new Notice(`Error calculating statistics: ${msg}`);
-            throw msg;
+            throw new Error(msg);
         }
     }
 
@@ -116,7 +116,7 @@ export class CountCraftCounter {
             case CounterType.HEADING_COUNT:
                 return stats.headingCount;
                 
-            case CounterType.HEADING_LEVEL_COUNT:
+            case CounterType.HEADING_LEVEL_COUNT: {
                 if (parameter === undefined) {
                     throw new Error('Heading level parameter is required');
                 }
@@ -125,9 +125,10 @@ export class CountCraftCounter {
                     throw new Error('Heading level must be between 1 and 6');
                 }
                 return stats.headingsByLevel[level] || 0;
+            }
                 
             default:
-                throw new Error(`Unknown counter type: ${type}`);
+                throw new Error(`Unknown counter type: ${String(type)}`);
         }
     }
 
@@ -186,7 +187,7 @@ export class CountCraftCounter {
             
             if (cachedHeadings.length > 0) {
                 const headingsByLevel: { [level: number]: number } = {};
-                cachedHeadings.forEach((heading: any) => {
+                cachedHeadings.forEach((heading: HeadingCache) => {
                     headingsByLevel[heading.level] = (headingsByLevel[heading.level] || 0) + 1;
                 });
                 
@@ -242,14 +243,14 @@ export class CountCraftCounter {
     /**
      * Validates if file is suitable for processing
      */
-    isFileProcessable(file: TFile): boolean {
+    async isFileProcessable(file: TFile): Promise<boolean> {
         // Check if file is a markdown file
         if (file.extension !== 'md') {
             return false;
         }
 
         // Check if file exists and is readable
-        if (!this.app.vault.adapter.exists(file.path)) {
+        if (!(await this.app.vault.adapter.exists(file.path))) {
             return false;
         }
 
@@ -260,7 +261,7 @@ export class CountCraftCounter {
      * Gets preview statistics without updating properties
      */
     async getPreviewStats(file: TFile): Promise<FileStats> {
-        if (!this.isFileProcessable(file)) {
+        if (!(await this.isFileProcessable(file))) {
             throw new Error('File is not processable');
         }
 

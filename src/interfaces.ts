@@ -1,5 +1,14 @@
 // src/interfaces.ts
 
+import { App } from "obsidian";
+
+export interface AppWithSetting extends App {
+    setting: {
+        open: () => void;
+        openTabById: (id: string) => any
+    }
+}
+
 export interface CounterConfig {
     id: string;
     name: string;
