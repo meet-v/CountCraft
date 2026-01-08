@@ -6,7 +6,7 @@ import { COUNTER_DEFINITIONS, DEFAULT_PROPERTY_NAMES} from './constants';
 import { ValidationHelper, DebugLogger, errorMessage} from './utils';
 import CountCraftPlugin from './main';
 
-class ConfirmModal extends Modal {
+export class ConfirmModal extends Modal {
     constructor(app: App, private message: string, private onConfirm: () => void) {
         super(app);
     }
@@ -184,7 +184,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
 
         // Plugin header
         new Setting(containerEl)
-            .setName('CountCraft Settings')
+            .setName('Configuration')
             .setDesc('Configure counting calculations and property mappings for your notes.')
             .setHeading();
 
@@ -203,7 +203,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
 
     private renderGeneralSettings(containerEl: HTMLElement): void {
         new Setting(containerEl)
-            .setName('General settings')
+            .setName('Mappings')
             .setDesc('Configure counting calculations and property mappings for your notes.')
             .setHeading();
 
@@ -299,7 +299,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
                         this.app,
                         `Are you sure you want to delete the "${displayName}" calculation?`,
                         () => {
-                            (async () => {
+                            void (async () => {
                                 this.plugin.settings.calculations.splice(index, 1);
                                 await this.plugin.saveSettings();
                                 this.display(); // Refresh settings
@@ -516,7 +516,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
     private editCalculation(config: CounterConfig, index: number): void {
         new EditCalculationModal(this.app, this.plugin, config, (updated) => {
             // Persist updated config
-            (async () => {
+            void (async () => {
                 this.plugin.settings.calculations[index] = updated;
                 await this.plugin.saveSettings();
                 this.display(); // refresh settings UI
@@ -527,7 +527,7 @@ export class CountCraftSettingsTab extends PluginSettingTab {
 
     private renderDebugSection(containerEl: HTMLElement): void {
         new Setting(containerEl)
-            .setName('Debug settings')
+            .setName('Debug')
             .setHeading();
 
         new Setting(containerEl)

@@ -1,6 +1,6 @@
 // src/counter.ts
 
-import { App, TFile, Notice, MarkdownRenderer, Plugin, HeadingCache } from 'obsidian';
+import { App, TFile, Notice, Component, MarkdownRenderer, Plugin, HeadingCache } from 'obsidian';
 import { CounterConfig, CounterType, FileStats, CountResult } from './interfaces';
 import { PropertyManager, CacheHelper, TextAnalyzer, DebugLogger, errorMessage } from './utils';
 
@@ -73,7 +73,10 @@ export class CountCraftCounter {
         // Render markdown to get clean text for word and character counts
         const tempDiv = document.createElement('div');
         // Passing the plugin component so that it does not gets stored in a real component and gets garbage collected
-        await MarkdownRenderer.render(this.app, content, tempDiv, sourcePath, this.plugin);
+        const disposable = new Component();
+        disposable.load();
+        await MarkdownRenderer.render(this.app, content, tempDiv, sourcePath, disposable);
+        disposable.unload();
         const cleanText = tempDiv.innerText;
 
         // Use clean text for word and character counts

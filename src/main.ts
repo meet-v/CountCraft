@@ -3,7 +3,7 @@
 import { App, Plugin, TFile, Notice, PluginManifest } from 'obsidian';
 import { PluginSettings, AppWithSetting } from './interfaces';
 import { DEFAULT_SETTINGS, COMMAND_IDS, ICONS, MESSAGES } from './constants';
-import { CountCraftSettingsTab } from './settings';
+import { CountCraftSettingsTab, ConfirmModal } from './settings';
 import { CountCraftCounter } from './counter';
 import { DebugLogger, errorMessage } from './utils';
 
@@ -22,7 +22,7 @@ export default class CountCraftPlugin extends Plugin {
         
         // Initialize debug logging
         DebugLogger.enable(this.settings.debugMode);
-        DebugLogger.log('CountCraft plugin loading...');
+        DebugLogger.log('Countcraft plugin loading...');
 
         // Initialize counter
         this.counter = new CountCraftCounter(this.app, this);
@@ -41,16 +41,16 @@ export default class CountCraftPlugin extends Plugin {
         // Register event listeners
         this.registerEventListeners();
 
-        DebugLogger.log('CountCraft plugin loaded successfully');
+        DebugLogger.log('Countcraft plugin loaded successfully');
         
         // Show welcome notice for first-time users
         if (this.settings.calculations.length === 0) {
-            new Notice('CountCraft: Open settings to configure your first calculation!', 5000);
+            new Notice('Countcraft: Open settings to configure your first calculation!', 5000);
         }
     }
 
     onunload() {
-        DebugLogger.log('CountCraft plugin unloading...');
+        DebugLogger.log('Countcraft plugin unloading...');
         this.removeRibbonIcon();
     }
 
@@ -120,7 +120,7 @@ export default class CountCraftPlugin extends Plugin {
 
         this.ribbonIconEl = this.addRibbonIcon(
             ICONS.RIBBON,
-            'CountCraft: Calculate Statistics',
+            'Countcraft: Calculate statistics',
             async () => {
                 await this.runCalculationCommand();
             }
@@ -150,7 +150,7 @@ export default class CountCraftPlugin extends Plugin {
                 if (this.settings.autoCalculate && file instanceof TFile && file.extension === 'md') {
                     // Use a small delay to ensure file is fully saved
                     setTimeout(() => {
-                        (async () => {
+                        void (async () => {
                             try {
                                 await this.counter.calculateFileStatsFromCache(file, this.settings.calculations);
                                 DebugLogger.log(`Auto-calculated stats for: ${file.path}`);
@@ -220,7 +220,7 @@ export default class CountCraftPlugin extends Plugin {
     /**
      * Run batch calculation command for all files
      */
-    private async runBatchCalculationCommand() {
+    private runBatchCalculationCommand() {
         const enabledCalculations = this.settings.calculations.filter(calc => calc.enabled);
         if (enabledCalculations.length === 0) {
             new Notice('No calculations are enabled. Please configure calculations in settings.');
@@ -235,13 +235,9 @@ export default class CountCraftPlugin extends Plugin {
         }
 
         const confirmMessage = `This will calculate statistics for ${files.length} files. This may take some time. Continue?`;
-        
-        if (!confirm(confirmMessage)) {
-            return;
-        }
 
         new ConfirmModal(this.app, confirmMessage, () => {
-            (async () => {
+            void (async () => {
                 try {
                     new Notice(`Starting calculation for ${files.length} files...`);
                     await this.counter.calculateAllFiles(this.settings.calculations);
@@ -396,7 +392,7 @@ export default class CountCraftPlugin extends Plugin {
         }
 
         // 2. Cast to a local helper type to allow property access safely
-        const s = settings as Record<string, any>;
+        const s = settings as Record<string, unknown>;
 
         // Check required fields exist and have correct types
         if (s.calculations && !Array.isArray(s.calculations)) {
@@ -416,13 +412,18 @@ export default class CountCraftPlugin extends Plugin {
         }
 
         // Validate calculation configurations
-        if (s.calculations) {
+        if (s.calculations && Array.isArray(s.calculations)) {
             for (const calc of s.calculations) {
                 // Check for presence and basic types
-                if (!calc || typeof calc !== 'object') return false;
-                
-                // Validate specific properties
-                if (!calc.id || !calc.type || !calc.property || typeof calc.enabled !== 'boolean') {
+                const c = calc as Record<string, unknown>;
+                if (!c || typeof c !== 'object') return false;
+                const hasRequiredStrings = 
+                    typeof c.id === 'string' &&
+                    typeof c.type === 'string' &&
+                    typeof c.property === 'string';
+                const hasRequiredBool = typeof c.enabled === 'boolean';
+
+                if (!hasRequiredStrings || !hasRequiredBool) {
                     return false;
                 }
             }

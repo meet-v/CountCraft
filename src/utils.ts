@@ -67,7 +67,7 @@ export class CacheHelper {
         const cache = this.app.metadataCache.getFileCache(file)
         const fmEnd = cache?.frontmatterPosition?.end?.line ?? -1; // frontmatter end line [1]
         const headings = cache?.headings ?? [];
-        return headings.filter(h => (h as HeadingCache).position.start.line > fmEnd);
+        return headings.filter(h => h.position.start.line > fmEnd);
     }
 }
 
@@ -199,19 +199,19 @@ export class DebugLogger {
 
     static log(message: string, data?: unknown) {
         if (this.enabled) {
-            console.debug(`[CountCraft] ${message}`, data ?? '');
+            console.debug(`[Countcraft] ${message}`, data ?? '');
         }
     }
 
     static warn(message: string, data?: unknown) {
         if (this.enabled) {
-            console.warn(`[CountCraft] ${message}`, data ?? '');
+            console.warn(`[Countcraft] ${message}`, data ?? '');
         }
     }
 
     static error(message: string, error?: unknown) {
         if (this.enabled) {
-            console.error(`[CountCraft] ${message}`, error ?? '');
+            console.error(`[Countcraft] ${message}`, error ?? '');
         }
     }
 }

@@ -5,7 +5,7 @@ import { App } from "obsidian";
 export interface AppWithSetting extends App {
     setting: {
         open: () => void;
-        openTabById: (id: string) => any
+        openTabById: (id: string) => void;
     }
 }
 
