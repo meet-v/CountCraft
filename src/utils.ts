@@ -1,6 +1,6 @@
 // src/utils.ts
 
-import { App, TFile, CachedMetadata, HeadingCache } from 'obsidian';
+import { App, TFile, CachedMetadata } from 'obsidian';
 import { CounterConfig, CounterType, HeadingInfo } from './interfaces';
 //import { PROPERTY_TYPE } from './constants';
 
@@ -199,19 +199,19 @@ export class DebugLogger {
 
     static log(message: string, data?: unknown) {
         if (this.enabled) {
-            console.debug(`[Countcraft] ${message}`, data ?? '');
+            console.debug(`[CountCraft] ${message}`, data ?? '');
         }
     }
 
     static warn(message: string, data?: unknown) {
         if (this.enabled) {
-            console.warn(`[Countcraft] ${message}`, data ?? '');
+            console.warn(`[CountCraft] ${message}`, data ?? '');
         }
     }
 
     static error(message: string, error?: unknown) {
         if (this.enabled) {
-            console.error(`[Countcraft] ${message}`, error ?? '');
+            console.error(`[CountCraft] ${message}`, error ?? '');
         }
     }
 }

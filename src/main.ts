@@ -22,7 +22,7 @@ export default class CountCraftPlugin extends Plugin {
         
         // Initialize debug logging
         DebugLogger.enable(this.settings.debugMode);
-        DebugLogger.log('Countcraft plugin loading...');
+        DebugLogger.log('CountCraft plugin loading...');
 
         // Initialize counter
         this.counter = new CountCraftCounter(this.app, this);
@@ -41,16 +41,16 @@ export default class CountCraftPlugin extends Plugin {
         // Register event listeners
         this.registerEventListeners();
 
-        DebugLogger.log('Countcraft plugin loaded successfully');
+        DebugLogger.log('CountCraft plugin loaded successfully');
         
         // Show welcome notice for first-time users
         if (this.settings.calculations.length === 0) {
-            new Notice('Countcraft: Open settings to configure your first calculation!', 5000);
+            new Notice('CountCraft: Open settings to configure your first calculation!', 5000);
         }
     }
 
     onunload() {
-        DebugLogger.log('Countcraft plugin unloading...');
+        DebugLogger.log('CountCraft plugin unloading...');
         this.removeRibbonIcon();
     }
 
@@ -120,7 +120,7 @@ export default class CountCraftPlugin extends Plugin {
 
         this.ribbonIconEl = this.addRibbonIcon(
             ICONS.RIBBON,
-            'Countcraft: Calculate statistics',
+            'CountCraft: Calculate statistics',
             async () => {
                 await this.runCalculationCommand();
             }
@@ -220,7 +220,7 @@ export default class CountCraftPlugin extends Plugin {
     /**
      * Run batch calculation command for all files
      */
-    private runBatchCalculationCommand() {
+    private async runBatchCalculationCommand() {
         const enabledCalculations = this.settings.calculations.filter(calc => calc.enabled);
         if (enabledCalculations.length === 0) {
             new Notice('No calculations are enabled. Please configure calculations in settings.');
