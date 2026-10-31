@@ -1,8 +1,8 @@
 {
     "id": "countcraft",
     "name": "CountCraft",
-    "version": "1.0.0",
-    "minAppVersion": "1.4.0",
+    "version": "1.0.1",
+    "minAppVersion": "1.13.0",
     "description": "Powerful note statistics calculator that counts words, characters, lines, and headings, storing results in customizable properties.",
     "author": "Meet Vekaria",
     "authorUrl": "https://github.com/meet-v",
