@@ -229,4 +229,12 @@ Additional notices:
 
 ## CREDITS
 
-Created by [**Meet Vekaria**](https://github.com/meet-v/).
+Created with ❤️ [**Meet Vekaria**](https://github.com/meet-v/).
+
+If you found this useful, I invite you to:
+
+Buy Me a Coffee:
+"https://buymeacoffee.com/meet.v",
+
+Be a GitHub Sponsor:
+"https://github.com/sponsors/meet-v"
